@@ -29,6 +29,13 @@ struct Opt {
     /// "sierra" | "sierra3" => SIERRA_3,
     #[structopt(short, long, default_value = "floyd")]
     dither_algo: String,
+
+    /// Output debug image to the given path
+    #[structopt(short = "c", long)]
+    debug_chars: bool,
+
+
+    // /// Colors (array of characters)
 }
 
 fn main() -> Result<()> {
@@ -68,9 +75,32 @@ fn main() -> Result<()> {
     let image = image::RgbImage::from_raw(width, height, image.raw_buf())
         .context("Could not convert back to a regular image")?;
 
+    // Output debug image
     if let Some(path) = cfg.debug_path {
         image.save(path)?;
     }
+
+    // Output to wordle unicode
+    let mut output = String::new();
+    for (_, row) in image.enumerate_rows() {
+        for (_, _, px) in row {
+            if px.0[0] > 0 {
+                if cfg.debug_chars {
+                    output.push('#');
+                } else {
+                    output.push('⬛');
+                }
+            } else {
+                if cfg.debug_chars {
+                    output.push('_');
+                } else {
+                    output.push('🟩');
+                }
+            }
+        }
+        output.push('\n');
+    }
+    println!("{}", output);
 
     Ok(())
 }
